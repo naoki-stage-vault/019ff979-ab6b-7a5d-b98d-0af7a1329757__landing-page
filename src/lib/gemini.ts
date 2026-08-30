@@ -60,7 +60,7 @@ async function fetchModelNames(key: string): Promise<string[]> {
   }
 }
 
-/** Preferimos modelos flash recientes; los de imagen no sirven para generar SVG. */
+/** Preferimos modelos flash recientes; los que no generan texto no sirven para SVG. */
 function scoreModel(name: string): number {
   let s = 0;
   if (/flash/i.test(name)) s += 10;
@@ -69,10 +69,22 @@ function scoreModel(name: string): number {
   if (/2\.0/.test(name)) s += 2;
   if (/^gemini-3/.test(name)) s += 2;
   if (/flash-lite/i.test(name)) s += 1;
-  if (/image|imagen/i.test(name)) s -= 10;
+  if (isNonTextModel(name)) s -= 10;
   if (/thinking/i.test(name)) s -= 5;
   if (/preview/i.test(name)) s -= 1;
   return s;
+}
+
+/**
+ * Modelos que no producen texto y por tanto no pueden dibujar un SVG:
+ * generación de imágenes (Nano Banana, Imagen), voz (TTS), vídeo, música y
+ * embeddings. Todos aparecen en /models con generateContent y puntúan alto
+ * por contener "flash", así que hay que excluirlos explícitamente.
+ */
+function isNonTextModel(name: string): boolean {
+  return /image|imagen|nano-banana|tts|audio|speech|music|veo|video|embedding|embed|live|realtime/i.test(
+    name
+  );
 }
 
 /** Máximo de modelos distintos que probamos ante un 404 antes de rendirnos. */
@@ -91,17 +103,12 @@ const KNOWN_TEXT_MODELS = [
   "gemini-1.5-flash",
 ];
 
-/** Los doodles se generan como SVG, que es texto: los modelos de imagen no sirven. */
-function isImageModel(name: string): boolean {
-  return /image|imagen|nano-banana/i.test(name);
-}
-
 /**
  * Modelos candidatos para la clave: los de texto disponibles en su cuenta,
  * mejor puntuados primero, seguidos de los conocidos como respaldo.
  */
 export async function candidateModels(key: string): Promise<string[]> {
-  const account = (await fetchModelNames(key)).filter((m) => !isImageModel(m));
+  const account = (await fetchModelNames(key)).filter((m) => !isNonTextModel(m));
   const ranked = [...account].sort((a, b) => scoreModel(b) - scoreModel(a));
   const defaults = KNOWN_TEXT_MODELS.filter((m) => !ranked.includes(m));
   return [...ranked, ...defaults];
@@ -145,6 +152,19 @@ async function generateWithModel(
       return {
         ok: false,
         message: "El modelo de Gemini no está disponible para tu cuenta. Buscamos otro…",
+        kind: "unknown",
+        notFound: true,
+      };
+    }
+    // Un modelo que no acepta salida de texto (p. ej. un TTS) no puede dibujar
+    // un SVG. Lo tratamos como "no disponible" para probar el siguiente.
+    const textModalityRejected =
+      res.status === 400 &&
+      /modalities|response_modalities|accepts the following combination/i.test(apiMsg);
+    if (textModalityRejected) {
+      return {
+        ok: false,
+        message: "Ese modelo no genera texto (SVG). Buscamos otro…",
         kind: "unknown",
         notFound: true,
       };
@@ -213,8 +233,8 @@ async function generateWithModel(
 /**
  * Genera el SVG probando los modelos de texto de la clave en orden: primero el
  * de la caché (si sigue siendo un candidato válido) y luego el resto, saltando
- * los que respondan 404. Un error real (clave inválida, cuota, bloqueo, SVG no
- * válido…) corta la ejecución sin probar más modelos.
+ * los que respondan 404 o rechacen la salida de texto. Un error real (clave
+ * inválida, cuota, bloqueo, SVG no válido…) corta sin probar más modelos.
  */
 export async function generateSvg(req: GenerateRequest): Promise<GenerateResult> {
   const candidates = await candidateModels(req.key);
