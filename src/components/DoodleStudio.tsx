@@ -97,7 +97,12 @@ export default function DoodleStudio() {
     );
     setBusy(null);
     if (!res.ok) {
-      notify(res.message, "error");
+      notify(
+        res.notFound
+          ? "Este modelo de Gemini no está disponible para tu cuenta. Probamos con otro…"
+          : res.message,
+        "error"
+      );
       return;
     }
     const doodle: Doodle = {
@@ -119,16 +124,18 @@ export default function DoodleStudio() {
   const handleRegenerate = useCallback(async () => {
     if (busy?.active || !current) return;
     setBusy({ active: true, label: "Variación" });
-    const prompt = buildUserPrompt({
-      description: current.prompt,
-      variation: true,
-    });
+    const prompt = buildUserPrompt({ description: current.prompt, variation: true });
     const res = await callWithRetry(prompt, 0.95, () =>
       notify("El primer intento no salió bien. Reintentando…", "info")
     );
     setBusy(null);
     if (!res.ok) {
-      notify(res.message, "error");
+      notify(
+        res.notFound
+          ? "Este modelo de Gemini no está disponible para tu cuenta. Probamos con otro…"
+          : res.message,
+        "error"
+      );
       return;
     }
     setLibrary((lib) =>
@@ -137,6 +144,8 @@ export default function DoodleStudio() {
           ? {
               ...d,
               svg: sanitizeSvg(res.svg),
+              strokeOverride: null,
+              fillOverride: null,
               updatedAt: Date.now(),
             }
           : d
@@ -159,7 +168,12 @@ export default function DoodleStudio() {
       );
       setBusy(null);
       if (!res.ok) {
-        notify(res.message, "error");
+        notify(
+          res.notFound
+            ? "Este modelo de Gemini no está disponible para tu cuenta. Probamos con otro…"
+            : res.message,
+          "error"
+        );
         return;
       }
       setLibrary((lib) =>
@@ -168,6 +182,8 @@ export default function DoodleStudio() {
             ? {
                 ...d,
                 svg: sanitizeSvg(res.svg),
+                strokeOverride: null,
+                fillOverride: null,
                 updatedAt: Date.now(),
               }
             : d
@@ -232,8 +248,6 @@ export default function DoodleStudio() {
   const handleKeyValidated = useCallback(
     (key: string) => {
       save(KEYS.apiKey, key);
-      // Una clave nueva puede tener acceso a modelos distintos.
-      remove(KEYS.model);
       setApiKey(key);
       setKeyModal(false);
       notify("¡Clave conectada! Ya puedes generar doodles.", "success");
@@ -243,7 +257,6 @@ export default function DoodleStudio() {
 
   const handleKeyDelete = useCallback(() => {
     remove(KEYS.apiKey);
-    remove(KEYS.model);
     setApiKey(null);
     setKeyModal(false);
     notify("Clave borrada. Guárdala bien si quieres volver a usarla.", "info");

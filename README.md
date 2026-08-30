@@ -1,20 +1,18 @@
 # Doodle Studio
 
-Generador de doodles al estilo **Notion Faces** (como [faces.notion.com](https://faces.notion.com/)):
-doodles minimalistas de línea a mano alzada, caritas sencillas y relleno pastel plano,
-impulsados por la [API de Gemini](https://ai.google.dev/).
-
-La clave de API la pega el usuario y **se guarda solo en su navegador** (localStorage);
-todas las llamadas a Gemini se hacen directamente desde el cliente, nunca a un servidor propio.
+Generador de doodles e ilustraciones simples **al estilo de Notion Faces**
+(como [faces.notion.com](https://faces.notion.com/)), impulsado por la
+[API de Gemini](https://ai.google.dev/). La clave de API la pega el usuario y **se guarda solo
+en su navegador** (localStorage); todas las llamadas a Gemini se hacen directamente desde el
+cliente, nunca a un servidor propio.
 
 ## Funcionalidades
 
 - **Clave de API**: pantalla inicial para pegar/validar/borrar la clave, con mensajes claros
-  (clave inválida, cuota agotada, sin conexión). El modelo de Gemini se **descubre
-  automáticamente** según lo que la clave tenga disponible (se prueba con otro si uno no está
-  disponible).
-- **Generador**: una sola descripción y un solo estilo (Notion Faces). El prompt optimizado se
-  construye internamente y se envía a Gemini, que devuelve un SVG limpio y editable.
+  (clave inválida, cuota agotada, sin conexión).
+- **Generador**: una descripción y un único estilo coherente — línea fina a mano alzada,
+  caritas minimalistas y relleno pastel plano. El modelo se detecta automáticamente entre los
+  disponibles para tu clave (si el que usábamos deja de existir, probamos con otro).
 - **Editor**: vista previa con zoom y fondo alternable (blanco, transparente, cuadrícula),
   regenerar variaciones y refinar con una indicación (el SVG actual se envía como contexto).
 - **Biblioteca**: los doodles se guardan localmente en una galería con búsqueda, filtro de
