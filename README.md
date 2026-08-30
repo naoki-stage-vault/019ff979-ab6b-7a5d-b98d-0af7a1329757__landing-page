@@ -1,36 +1,35 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Doodle Studio
 
-## Getting Started
+Generador de doodles e ilustraciones simples al estilo visual de Notion, impulsado por la
+[API de Gemini](https://ai.google.dev/). La clave de API la pega el usuario y **se guarda solo
+en su navegador** (localStorage); todas las llamadas a Gemini se hacen directamente desde el
+cliente, nunca a un servidor propio.
 
-First, run the development server:
+## Funcionalidades
+
+- **Clave de API**: pantalla inicial para pegar/validar/borrar la clave, con mensajes claros
+  (clave inválida, cuota agotada, sin conexión).
+- **Generador**: descripción + selector de estilo (línea simple, relleno pastel, sticker,
+  icono, escena), grosor de trazo y paleta. Construye un prompt optimizado y pide a Gemini un
+  SVG limpio y editable.
+- **Editor**: vista previa con zoom y fondo alternable (blanco, transparente, cuadrícula),
+  cambio de color de trazo y relleno sin llamar a la API, regenerar variaciones y refinar con
+  una indicación (el SVG actual se envía como contexto).
+- **Biblioteca**: los doodles se guardan localmente en una galería con búsqueda, filtro de
+  favoritos y acciones (renombrar, duplicar, eliminar, favorito).
+- **Exportación**: SVG, PNG (256/512/1024 px, con o sin fondo), copiar SVG y copiar como data
+  URI para pegar en Notion.
+- **Detalles**: reintento automático si el SVG no es válido, atajos `Ctrl/⌘+Enter` (generar) y
+  `Ctrl/⌘+S` (guardar), diseño responsive y textos breves en español.
+
+## Desarrollo
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Stack
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS v4. Sin servidor: toda la lógica
+de la app corre en el navegador.
