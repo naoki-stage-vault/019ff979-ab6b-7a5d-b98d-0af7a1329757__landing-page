@@ -1,4 +1,4 @@
-/** Utilidades de SVG: saneado, anulación de colores, rasterizado y exportación. */
+/** Utilidades de SVG: saneado, rasterizado y exportación. */
 
 /** Elimina scripts, event handlers y enlaces javascript: del SVG. */
 export function sanitizeSvg(svg: string): string {
@@ -24,44 +24,6 @@ export function sanitizeSvg(svg: string): string {
         }
       }
     });
-    return new XMLSerializer().serializeToString(doc);
-  } catch {
-    return svg;
-  }
-}
-
-/**
- * Aplica anulaciones de color sobre el SVG sin volver a llamar a la API.
- * - stroke != null: reemplaza el trazo de todos los elementos con trazo y lo
- *   fija como color heredado en la raíz.
- * - fill != null: reemplaza el relleno de los elementos que tengan relleno
- *   (ignora none/transparent). Pasa "none" para quitar rellenos.
- */
-export function applyOverrides(
-  svg: string,
-  opts: { stroke?: string | null; fill?: string | null }
-): string {
-  if (typeof document === "undefined" || !svg) return svg;
-  try {
-    const doc = new DOMParser().parseFromString(svg, "image/svg+xml");
-    const root = doc.querySelector("svg");
-    if (!root) return svg;
-
-    if (opts.stroke != null) {
-      root.setAttribute("stroke", opts.stroke);
-      root.querySelectorAll("*").forEach((el) => {
-        const s = el.getAttribute("stroke");
-        if (s && s !== "none") el.setAttribute("stroke", opts.stroke as string);
-      });
-    }
-    if (opts.fill != null) {
-      root.querySelectorAll("*").forEach((el) => {
-        const f = el.getAttribute("fill");
-        if (f && f !== "none" && f !== "transparent") {
-          el.setAttribute("fill", opts.fill as string);
-        }
-      });
-    }
     return new XMLSerializer().serializeToString(doc);
   } catch {
     return svg;

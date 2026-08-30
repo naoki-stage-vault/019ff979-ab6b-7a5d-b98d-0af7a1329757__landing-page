@@ -141,13 +141,7 @@ export default function DoodleStudio() {
     setLibrary((lib) =>
       lib.map((d) =>
         d.id === current.id
-          ? {
-              ...d,
-              svg: sanitizeSvg(res.svg),
-              strokeOverride: null,
-              fillOverride: null,
-              updatedAt: Date.now(),
-            }
+          ? { ...d, svg: sanitizeSvg(res.svg), updatedAt: Date.now() }
           : d
       )
     );
@@ -179,13 +173,7 @@ export default function DoodleStudio() {
       setLibrary((lib) =>
         lib.map((d) =>
           d.id === current.id
-            ? {
-                ...d,
-                svg: sanitizeSvg(res.svg),
-                strokeOverride: null,
-                fillOverride: null,
-                updatedAt: Date.now(),
-              }
+            ? { ...d, svg: sanitizeSvg(res.svg), updatedAt: Date.now() }
             : d
         )
       );
