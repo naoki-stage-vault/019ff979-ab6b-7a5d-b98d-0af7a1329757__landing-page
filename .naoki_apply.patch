@@ -1,0 +1,20 @@
+--- a/src/lib/gemini.ts
++++ b/src/lib/gemini.ts
+@@ -198,9 +198,16 @@
+   let res = await generateWithModel(req, model);
+   if (!res.ok && res.notFound) {
+     remove(KEYS.model);
+     model = await pickModel(req.key);
+     save(KEYS.model, model);
+     res = await generateWithModel(req, model);
++    if (!res.ok && res.notFound) {
++      return {
++        ok: false,
++        message:
++          "Tu clave de Gemini no tiene ningún modelo disponible para dibujos. Revisa la configuración de tu cuenta.",
++        kind: "unknown",
++      };
++    }
+   }
+   return res;
+ }

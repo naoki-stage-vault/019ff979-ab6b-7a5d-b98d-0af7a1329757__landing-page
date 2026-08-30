@@ -1,8 +1,7 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import type { Doodle } from "@/lib/types";
-import { applyOverrides } from "@/lib/svg";
 import { formatDate } from "@/lib/utils";
 import {
   CopyPlusIcon,
@@ -33,7 +32,7 @@ export function LibraryPanel({
   const [query, setQuery] = useState("");
   const [onlyFav, setOnlyFav] = useState(false);
 
-  const filtered = useMemo(() => {
+  const filtered = (() => {
     const q = query.trim().toLowerCase();
     return library.filter((d) => {
       if (onlyFav && !d.favorite) return false;
@@ -43,7 +42,7 @@ export function LibraryPanel({
         d.prompt.toLowerCase().includes(q)
       );
     });
-  }, [library, query, onlyFav]);
+  })();
 
   return (
     <section className="rounded-xl border border-[#e9e9e7] bg-white p-5">
@@ -145,14 +144,7 @@ function DoodleCard({
   const [confirming, setConfirming] = useState(false);
   const confirmTimer = useRef<number | null>(null);
 
-  const svg = useMemo(
-    () =>
-      applyOverrides(doodle.svg, {
-        stroke: doodle.strokeOverride,
-        fill: doodle.fillOverride,
-      }),
-    [doodle]
-  );
+  const svg = doodle.svg;
 
   function commitRename() {
     const clean = name.trim();

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ApiKeyScreen } from "@/components/ApiKeyScreen";
 import { Banner, type BannerKind } from "@/components/Banner";
-import { GeneratorPanel, type GeneratorForm } from "@/components/GeneratorPanel";
+import { GeneratorPanel } from "@/components/GeneratorPanel";
 import { KeyIcon, SparkleIcon } from "@/components/icons";
 import { LibraryPanel } from "@/components/LibraryPanel";
 import { PreviewEditor } from "@/components/PreviewEditor";
@@ -33,12 +33,7 @@ export default function DoodleStudio() {
   const [banner, setBanner] = useState<BannerState | null>(null);
   const [busy, setBusy] = useState<BusyState>(null);
   const [keyModal, setKeyModal] = useState(false);
-  const [form, setForm] = useState<GeneratorForm>({
-    description: "",
-    style: "line",
-    strokeWidth: "medio",
-    palette: "pastel",
-  });
+  const [description, setDescription] = useState("");
 
   const bannerTimer = useRef<number | null>(null);
   const handlersRef = useRef<{ generate: () => void; save: () => void }>({
@@ -90,18 +85,13 @@ export default function DoodleStudio() {
 
   const handleGenerate = useCallback(async () => {
     if (busy?.active) return;
-    const description = form.description.trim();
-    if (!description) {
+    const desc = description.trim();
+    if (!desc) {
       notify("Escribe qué quieres dibujar primero.", "info");
       return;
     }
     setBusy({ active: true, label: "Dibujando" });
-    const prompt = buildUserPrompt({
-      description,
-      style: form.style,
-      strokeWidth: form.strokeWidth,
-      palette: form.palette,
-    });
+    const prompt = buildUserPrompt({ description: desc });
     const res = await callWithRetry(prompt, 0.9, () =>
       notify("El primer intento no salió bien. Reintentando…", "info")
     );
@@ -112,11 +102,8 @@ export default function DoodleStudio() {
     }
     const doodle: Doodle = {
       id: uid(),
-      name: defaultName(description),
-      prompt: description,
-      style: form.style,
-      strokeWidth: form.strokeWidth,
-      palette: form.palette,
+      name: defaultName(desc),
+      prompt: desc,
       svg: sanitizeSvg(res.svg),
       strokeOverride: null,
       fillOverride: null,
@@ -127,16 +114,13 @@ export default function DoodleStudio() {
     setLibrary((lib) => [doodle, ...lib]);
     setCurrentId(doodle.id);
     notify("¡Listo! Tu doodle se guardó en la biblioteca.", "success");
-  }, [busy, form, callWithRetry, notify]);
+  }, [busy, description, callWithRetry, notify]);
 
   const handleRegenerate = useCallback(async () => {
     if (busy?.active || !current) return;
     setBusy({ active: true, label: "Variación" });
     const prompt = buildUserPrompt({
       description: current.prompt,
-      style: current.style,
-      strokeWidth: current.strokeWidth,
-      palette: current.palette,
       variation: true,
     });
     const res = await callWithRetry(prompt, 0.95, () =>
@@ -153,8 +137,6 @@ export default function DoodleStudio() {
           ? {
               ...d,
               svg: sanitizeSvg(res.svg),
-              strokeOverride: null,
-              fillOverride: null,
               updatedAt: Date.now(),
             }
           : d
@@ -169,9 +151,6 @@ export default function DoodleStudio() {
       setBusy({ active: true, label: "Refinando" });
       const prompt = buildUserPrompt({
         description: current.prompt,
-        style: current.style,
-        strokeWidth: current.strokeWidth,
-        palette: current.palette,
         refineText: text,
         currentSvg: current.svg,
       });
@@ -189,8 +168,6 @@ export default function DoodleStudio() {
             ? {
                 ...d,
                 svg: sanitizeSvg(res.svg),
-                strokeOverride: null,
-                fillOverride: null,
                 updatedAt: Date.now(),
               }
             : d
@@ -199,18 +176,6 @@ export default function DoodleStudio() {
       notify("Ajuste aplicado.", "success");
     },
     [busy, current, callWithRetry, notify]
-  );
-
-  const setOverride = useCallback(
-    (field: "strokeOverride" | "fillOverride", value: string | null) => {
-      if (!currentId) return;
-      setLibrary((lib) =>
-        lib.map((d) =>
-          d.id === currentId ? { ...d, [field]: value, updatedAt: Date.now() } : d
-        )
-      );
-    },
-    [currentId]
   );
 
   const handleSave = useCallback(() => {
@@ -267,6 +232,8 @@ export default function DoodleStudio() {
   const handleKeyValidated = useCallback(
     (key: string) => {
       save(KEYS.apiKey, key);
+      // Una clave nueva puede tener acceso a modelos distintos.
+      remove(KEYS.model);
       setApiKey(key);
       setKeyModal(false);
       notify("¡Clave conectada! Ya puedes generar doodles.", "success");
@@ -276,6 +243,7 @@ export default function DoodleStudio() {
 
   const handleKeyDelete = useCallback(() => {
     remove(KEYS.apiKey);
+    remove(KEYS.model);
     setApiKey(null);
     setKeyModal(false);
     notify("Clave borrada. Guárdala bien si quieres volver a usarla.", "info");
@@ -361,8 +329,8 @@ export default function DoodleStudio() {
         <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
           <div className="flex flex-col gap-6">
             <GeneratorPanel
-              form={form}
-              onChange={(next) => setForm((f) => ({ ...f, ...next }))}
+              description={description}
+              onChange={setDescription}
               onGenerate={handleGenerate}
               busy={busy?.active ?? false}
             />
@@ -372,8 +340,6 @@ export default function DoodleStudio() {
               busyLabel={busy?.label ?? null}
               onRegenerate={handleRegenerate}
               onRefine={handleRefine}
-              onStrokeChange={(c) => setOverride("strokeOverride", c)}
-              onFillChange={(c) => setOverride("fillOverride", c)}
               onSave={handleSave}
               notify={notify}
             />

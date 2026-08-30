@@ -1,11 +1,9 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import type { Doodle } from "@/lib/types";
-import { FILL_PRESETS, STROKE_PRESETS } from "@/lib/config";
 import {
-  applyOverrides,
   copyText,
   downloadBlob,
   downloadText,
@@ -51,8 +49,6 @@ export function PreviewEditor({
   busyLabel,
   onRegenerate,
   onRefine,
-  onStrokeChange,
-  onFillChange,
   onSave,
   notify,
 }: {
@@ -61,8 +57,6 @@ export function PreviewEditor({
   busyLabel: string | null;
   onRegenerate: () => void;
   onRefine: (text: string) => void;
-  onStrokeChange: (color: string | null) => void;
-  onFillChange: (color: string | null) => void;
   onSave: () => void;
   notify: (message: string, kind?: BannerKind) => void;
 }) {
@@ -73,16 +67,7 @@ export function PreviewEditor({
   const [pngSize, setPngSize] = useState(512);
   const [pngTransparent, setPngTransparent] = useState(false);
 
-  const svg = useMemo(
-    () =>
-      doodle
-        ? applyOverrides(doodle.svg, {
-            stroke: doodle.strokeOverride,
-            fill: doodle.fillOverride,
-          })
-        : "",
-    [doodle]
-  );
+  const svg = doodle?.svg ?? "";
 
   if (!doodle) {
     return (
@@ -202,36 +187,6 @@ export function PreviewEditor({
             </button>
           );
         })}
-      </div>
-
-      {/* Colores */}
-      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <ColorControl
-          label="Color de trazo"
-          value={doodle.strokeOverride}
-          presets={STROKE_PRESETS}
-          placeholder="#1f1e1d"
-          onChange={onStrokeChange}
-          resetLabel="Original"
-          onReset={() => onStrokeChange(null)}
-        />
-        <ColorControl
-          label="Color de relleno"
-          value={doodle.fillOverride}
-          presets={FILL_PRESETS}
-          placeholder="#f9a8d4"
-          onChange={onFillChange}
-          resetLabel="Original"
-          onReset={() => onFillChange(null)}
-          extra={
-            <button
-              onClick={() => onFillChange("none")}
-              className="text-xs font-medium text-[#2383e2] hover:underline"
-            >
-              Sin relleno
-            </button>
-          }
-        />
       </div>
 
       {/* Acciones */}
@@ -367,73 +322,5 @@ export function PreviewEditor({
         </label>
       </div>
     </section>
-  );
-}
-
-function ColorControl({
-  label,
-  value,
-  presets,
-  placeholder,
-  onChange,
-  resetLabel,
-  onReset,
-  extra,
-}: {
-  label: string;
-  value: string | null;
-  presets: string[];
-  placeholder: string;
-  onChange: (color: string) => void;
-  resetLabel: string;
-  onReset: () => void;
-  extra?: ReactNode;
-}) {
-  return (
-    <div>
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-medium text-[#37352f]">{label}</p>
-        <div className="flex items-center gap-2">
-          {extra}
-          <button
-            onClick={onReset}
-            className="text-xs font-medium text-[#787774] hover:text-[#37352f] hover:underline"
-          >
-            {resetLabel}
-          </button>
-        </div>
-      </div>
-      <div className="mt-1.5 flex items-center gap-2">
-        <label
-          className="relative h-9 w-11 shrink-0 cursor-pointer overflow-hidden rounded-md border border-[#e9e9e7]"
-          title="Elegir color"
-        >
-          <input
-            type="color"
-            value={value ?? placeholder}
-            onChange={(e) => onChange(e.target.value)}
-            className="absolute -inset-2 h-[calc(100%+16px)] w-[calc(100%+16px)] cursor-pointer"
-          />
-        </label>
-        <div className="flex flex-wrap gap-1">
-          {presets.map((c) => {
-            const active = value === c;
-            return (
-              <button
-                key={c}
-                onClick={() => onChange(c)}
-                title={c}
-                className={`h-6 w-6 rounded-md border transition-transform ${
-                  active
-                    ? "scale-110 border-[#2383e2] ring-2 ring-[#2383e2]/30"
-                    : "border-black/10 hover:scale-110"
-                }`}
-                style={{ backgroundColor: c }}
-              />
-            );
-          })}
-        </div>
-      </div>
-    </div>
   );
 }

@@ -1,7 +1,3 @@
-export type DoodleStyle = "line" | "pastel" | "sticker" | "icon" | "scene";
-export type StrokeWidth = "fino" | "medio" | "grueso";
-export type PaletteId = "mono" | "pastel" | "calido" | "frio" | "natural";
-
 export type ErrorKind =
   | "invalid-key"
   | "quota"
@@ -14,9 +10,6 @@ export interface Doodle {
   id: string;
   name: string;
   prompt: string;
-  style: DoodleStyle;
-  strokeWidth: StrokeWidth;
-  palette: PaletteId;
   /** SVG generado por Gemini (ya saneado). */
   svg: string;
   /** Anulaciones de color posteriores a la generación (null = mantener el original). */
@@ -25,6 +18,10 @@ export interface Doodle {
   favorite: boolean;
   createdAt: number;
   updatedAt: number;
+  /** Campos históricos de versiones anteriores (ignorados). */
+  style?: string;
+  strokeWidth?: string;
+  palette?: string;
 }
 
 export interface GenerateResultOk {
@@ -36,6 +33,8 @@ export interface GenerateResultErr {
   ok: false;
   message: string;
   kind: ErrorKind;
+  /** true cuando el modelo no está disponible para la cuenta (para reintentar con otro). */
+  notFound?: boolean;
 }
 
 export type GenerateResult = GenerateResultOk | GenerateResultErr;

@@ -3,6 +3,7 @@
 export const KEYS = {
   apiKey: "doodle-studio:api-key",
   library: "doodle-studio:library",
+  model: "doodle-studio:model",
 } as const;
 
 export function load<T>(key: string, fallback: T): T {
