@@ -247,6 +247,7 @@ export default function DoodleStudio() {
 
   const handleKeyValidated = useCallback(
     (key: string) => {
+      remove(KEYS.model); // el modelo cacheado puede no valer para la nueva clave
       save(KEYS.apiKey, key);
       setApiKey(key);
       setKeyModal(false);
@@ -257,6 +258,7 @@ export default function DoodleStudio() {
 
   const handleKeyDelete = useCallback(() => {
     remove(KEYS.apiKey);
+    remove(KEYS.model);
     setApiKey(null);
     setKeyModal(false);
     notify("Clave borrada. Guárdala bien si quieres volver a usarla.", "info");
